@@ -1,1 +1,2 @@
-flask==2.3.2
+fastapi==0.95.1
+uvicorn[standard]
