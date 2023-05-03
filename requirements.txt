@@ -1,2 +1,4 @@
 fastapi==0.95.1
 uvicorn[standard]
+pymorphy2
+pymorphy2-dicts-ru
