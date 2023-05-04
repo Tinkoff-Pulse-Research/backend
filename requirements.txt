@@ -1,5 +1,6 @@
-fastapi==0.95.1
+fastapi
 uvicorn[standard]
 pymorphy2
 pymorphy2-dicts-ru
 nltk
+scikit-learn

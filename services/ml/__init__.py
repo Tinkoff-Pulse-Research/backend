@@ -1,6 +1,10 @@
-from preprocessor import Preprocessor
+from .preprocessor import Preprocessor
+
 from pathlib import Path
 import pickle
+import nltk
+
+nltk.download('stopwords')
 
 BASE = Path(__file__).parent
 
