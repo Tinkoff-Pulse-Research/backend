@@ -37,7 +37,7 @@ async def app_detect_slang(response: Response, text: models.Text):
         return {"status": "error", "message": "No text provided"}
     slang_confidence = detector.detect_slang(text.text)[0]
     is_slang = slang_confidence >= 0.5
-    return {"status": "ok", "result": {"slang": is_slang, "confidence": slang_confidence}}
+    return {"status": "ok", "result": {"slang": bool(is_slang), "confidence": float(slang_confidence)}}
 
 
 @app.get("/")

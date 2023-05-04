@@ -12,7 +12,8 @@ morph = pymorphy2.MorphAnalyzer(lang='ru')
 def get_term_definition(term: str) -> typing.Optional[str]:
     definition = glossary.get(term.capitalize().strip(), None)
     if definition is None:
-        return glossary.get(morph.parse(term)[0].normal_form.capitalize().strip(), None)
+        definition = glossary.get(morph.parse(term)[0].normal_form.capitalize().strip(), None)
+    return definition
 
 
 def get_terms(text: str) -> typing.Optional[list[dict]]:
@@ -20,7 +21,8 @@ def get_terms(text: str) -> typing.Optional[list[dict]]:
     result = []
     for word in text.split():
         word = re.sub(re.escape(string.punctuation), "", word)
-        if definition := get_term_definition(word):
+        definition = get_term_definition(word)
+        if definition:
             result.append({
                 word: definition
             })
