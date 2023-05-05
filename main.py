@@ -56,12 +56,20 @@ async def app_detect_slang(response: Response, text: models.Text):
         **{
             str(glossary.remove_punctuation(text.text).split().index(key)) + "_determined": value
             for key, value in determined_terms.items()
+            if " " not in key
         },
         **{
             f"{i}_ml": glossary.get_term_definition(text.text.split()[i])
             for i in detector.detect_slang(text.text)
         },
     }
+
+    for key, value in determined_terms.items():
+        if " " not in key:
+            continue
+        raw_text = glossary.remove_punctuation(text.text)
+        first_index = raw_text[:raw_text.index(key)].count(' ')
+        res[f"{first_index}:{first_index + key.count(' ')}_determined2"] = value
 
     return {"status": "ok", "result": {"slang": bool(res), "highlight": res}}
 
