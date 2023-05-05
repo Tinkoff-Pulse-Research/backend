@@ -38,6 +38,8 @@ def get_terms(text: str) -> typing.Optional[list[dict]]:
         for seq in {word, pair, triple}:
             if not seq:
                 continue
+            if any(len(word) == 1 for word in seq.split()):
+                continue
             # print(seq)
             definition = get_term_definition(seq)
             if not definition:
