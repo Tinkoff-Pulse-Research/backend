@@ -17,11 +17,23 @@ def remove_punctuation(s: str) -> str:
     return s
 
 
-def get_term_definition(term: str) -> typing.Optional[str]:
-    definition = glossary.get(term.capitalize().strip(), None)
+def get_term_definition(term: str) -> typing.Optional[typing.Tuple[typing.Optional[str], typing.Optional[str]]]:
+    key = term.capitalize().strip()
+    definition = glossary.get(key, None)
     if definition is None:
-        definition = glossary.get(morph.parse(term)[0].normal_form.capitalize().strip(), None)
-    return definition
+        key = morph.parse(term)[0].normal_form.capitalize().strip()
+        definition = glossary.get(key, None)
+    if definition is None:
+        match = get_close_matches(
+            term.capitalize().strip().lower(),
+            map(lambda x: x.lower(), glossary), cutoff=0.9, n=1
+        )
+        # print(match)
+        if not match:
+            return None, None
+        key = str(match[0]).capitalize()
+        definition = glossary.get(key, None)
+    return definition, key
 
 
 def get_terms(text: str) -> typing.Optional[list[dict]]:
@@ -30,18 +42,25 @@ def get_terms(text: str) -> typing.Optional[list[dict]]:
     words = text.split()
     for i in range(len(words)):
         word = remove_punctuation(words[i])
-        pair = remove_punctuation(" ".join(words[i:i + 2]) if i + 2 < len(words) else "")
-        triple = remove_punctuation(" ".join(words[i:i + 3]) if i + 3 < len(words) else "")
+        pair = remove_punctuation(" ".join(words[i:i + 2]) if i + 2 <= len(words) else "")
+        triple = remove_punctuation(" ".join(words[i:i + 3]) if i + 3 <= len(words) else "")
+        # pair = ""
+        # triple = ""
         word, pair, triple = map(lambda x: x.replace(".", "").replace(",", ""), (word, pair, triple))
         for seq in {word, pair, triple}:
             if not seq:
                 continue
-            print(seq)
-            definition = get_term_definition(seq)
+            if any(len(word) == 1 for word in seq.split()):
+                continue
+            # print(seq)
+            definition = get_term_definition(seq)[0]
             if not definition:
-                match = get_close_matches(seq.lower(), map(lambda x: x.lower(), glossary), cutoff=0.9, n=1)
-                print("match:", match)
-                if match:
+                if match := get_close_matches(
+                    seq.lower(),
+                    map(lambda x: x.lower(), glossary),
+                    cutoff=0.9,
+                    n=1,
+                ):
                     definition = glossary.get(str(match[0]).capitalize(), None)
             if definition:
                 result.append({

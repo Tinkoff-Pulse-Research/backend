@@ -1,9 +1,20 @@
-from fastapi import FastAPI, Response
+import re
 
+from fastapi import FastAPI, Response
+from fastapi.middleware.cors import CORSMiddleware
 import models
 from services import detector, glossary
+from services.utils import run_sync
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post("/get_terms")
@@ -12,8 +23,8 @@ async def app_get_terms(response: Response, text: models.Text):
     if not text.text:
         response.status_code = 400
         return {"status": "error", "message": "No text provided"}
-    terms = glossary.get_terms(text.text)
-    return {"status": "ok", "terms": terms}
+
+    return {"status": "ok", "terms": await run_sync(glossary.get_terms, text.text)}
 
 
 @app.get("/term/{word}")
@@ -22,11 +33,14 @@ async def app_get_term_definition(response: Response, word: str):
     if not word:
         response.status_code = 400
         return {"status": "error", "message": "No text provided"}
-    definition = glossary.get_term_definition(word)
+
+    definition, key = await run_sync(glossary.get_term_definition, word)
+
     if definition is None:
         response.status_code = 404
-        return {'status': "error", "message": "Provided term not found"}
-    return {"status": "ok", "result": definition}
+        return {"status": "error", "message": "Provided term not found"}
+
+    return {"status": "ok", "result": {"definition": definition, "key": key}}
 
 
 @app.post("/detect_slang")
@@ -35,9 +49,32 @@ async def app_detect_slang(response: Response, text: models.Text):
     if not text.text:
         response.status_code = 400
         return {"status": "error", "message": "No text provided"}
-    slang_confidence = detector.detect_slang(text.text)[0]
-    is_slang = slang_confidence >= 0.5
-    return {"status": "ok", "result": {"slang": bool(is_slang), "confidence": float(slang_confidence)}}
+
+    determined_terms = {}
+    for term in await run_sync(glossary.get_terms, text.text):
+        determined_terms.update(term)
+    # print(f"TERMS: {determined_terms}")
+
+    res = {
+        **{
+            str(re.split(r"\s", glossary.remove_punctuation(text.text)).index(key)) + "_determined": value
+            for key, value in determined_terms.items()
+            if " " not in key
+        },
+        **{
+            f"{i}_ml": (await run_sync(glossary.get_term_definition, text.text.split()[i]))[0]
+            for i in detector.detect_slang(text.text)
+        },
+    }
+
+    for key, value in determined_terms.items():
+        if " " not in key:
+            continue
+        raw_text = glossary.remove_punctuation(text.text)
+        first_index = raw_text[:raw_text.index(key)].count(' ')
+        res[f"{first_index}:{first_index + key.count(' ')}_determined2"] = value
+
+    return {"status": "ok", "result": {"slang": bool(res), "highlight": res}}
 
 
 @app.get("/")
