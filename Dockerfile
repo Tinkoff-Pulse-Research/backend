@@ -6,7 +6,6 @@ ENV PIP_NO_CACHE_DIR=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-WORKDIR /app
 COPY ./requirements.txt /app/requirements.txt
 
 RUN python -m pip install \
@@ -19,8 +18,6 @@ RUN python -m pip install \
 RUN rm -rf /tmp/*
 
 COPY . /app
-
 WORKDIR /app
-
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 EXPOSE 8000
