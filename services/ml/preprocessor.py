@@ -8,16 +8,7 @@ from pymorphy2 import MorphAnalyzer
 
 class Preprocessor:
     def __init__(self):
-        self._stopwords = set(stopwords.words("russian")) | {
-            "сегодня",
-            "это",
-            "вверх",
-            "вниз",
-            "р",
-            "деньги",
-            "купить",
-            "продать",
-        }
+        self._stopwords = set(stopwords.words("russian")) | {"р"}
         self._morph = MorphAnalyzer()
 
     def _lemmatize(self, text: str) -> str:
@@ -80,16 +71,18 @@ class Preprocessor:
 
     def _preprocess(self, text: str) -> str:
         """Combines all methods of preprocessing"""
-        return self._lemmatize(
-            self._remove_stopwords(
-                self._normalize_whitespaces(
-                    self._remove_roman(
-                        self._keep_only_letters(
-                            self._remove_hashtags(
-                                self._remove_links(
-                                    self._remove_mentions(
-                                        self._remove_tickers(
-                                            text.lower().replace("ё", "е")
+        return (
+            self._lemmatize(
+                self._remove_stopwords(
+                    self._normalize_whitespaces(
+                        self._remove_roman(
+                            self._keep_only_letters(
+                                self._remove_hashtags(
+                                    self._remove_links(
+                                        self._remove_mentions(
+                                            self._remove_tickers(
+                                                text.lower().replace("ё", "е")
+                                            )
                                         )
                                     )
                                 )
@@ -98,6 +91,8 @@ class Preprocessor:
                     )
                 )
             )
+            .replace("ё", "е")
+            .replace("э", "е")
         )
 
     def preprocess(self, texts: typing.List[str]) -> typing.List[str]:
