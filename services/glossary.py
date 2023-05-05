@@ -2,11 +2,19 @@ import json
 import re
 import string
 import typing
+from difflib import get_close_matches
 from pathlib import Path
 import pymorphy2
 
 glossary = json.loads((Path(__file__).parent / "glossary.json").read_text(encoding="utf-8"))
 morph = pymorphy2.MorphAnalyzer(lang='ru')
+
+
+def remove_punctuation(s: str) -> str:
+    """Removes all punctuation in text excluding dashes and hyphens"""
+    for sign in ",.!?<>@#$%^&*()_+=:;'\"/\\":
+        s = s.replace(sign, "")
+    return s
 
 
 def get_term_definition(term: str) -> typing.Optional[str]:
@@ -19,15 +27,28 @@ def get_term_definition(term: str) -> typing.Optional[str]:
 def get_terms(text: str) -> typing.Optional[list[dict]]:
     """Returning a list of terms found in provided text"""
     result = []
-    for word in text.split():
-        word = re.sub(re.escape(string.punctuation), "", word)
-        definition = get_term_definition(word)
-        if definition:
-            result.append({
-                word: definition
-            })
+    words = text.split()
+    for i in range(len(words)):
+        word = remove_punctuation(words[i])
+        pair = remove_punctuation(" ".join(words[i:i + 2]) if i + 2 < len(words) else "")
+        triple = remove_punctuation(" ".join(words[i:i + 3]) if i + 3 < len(words) else "")
+        word, pair, triple = map(lambda x: x.replace(".", "").replace(",", ""), (word, pair, triple))
+        for seq in {word, pair, triple}:
+            if not seq:
+                continue
+            print(seq)
+            definition = get_term_definition(seq)
+            if not definition:
+                match = get_close_matches(seq.lower(), map(lambda x: x.lower(), glossary), cutoff=0.9, n=1)
+                print("match:", match)
+                if match:
+                    definition = glossary.get(str(match[0]).capitalize(), None)
+            if definition:
+                result.append({
+                    seq: definition
+                })
     return result
 
 
 if __name__ == '__main__':
-    print(get_term_definition("памп"))
+    print(get_terms("Пампить или не пампить, вот в чем вопрос. Входить в лангусты или ждать лучших дивгэпов?"))
