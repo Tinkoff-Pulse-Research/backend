@@ -53,7 +53,7 @@ async def app_detect_slang(response: Response, text: models.Text):
     determined_terms = {}
     for term in glossary.get_terms(text.text):
         determined_terms.update(term)
-    print(f"TERMS: {determined_terms}")
+    # print(f"TERMS: {determined_terms}")
 
     res = {
         **{
