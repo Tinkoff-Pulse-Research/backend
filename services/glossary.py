@@ -30,8 +30,10 @@ def get_terms(text: str) -> typing.Optional[list[dict]]:
     words = text.split()
     for i in range(len(words)):
         word = remove_punctuation(words[i])
-        pair = remove_punctuation(" ".join(words[i:i + 2]) if i + 2 < len(words) else "")
-        triple = remove_punctuation(" ".join(words[i:i + 3]) if i + 3 < len(words) else "")
+        # pair = remove_punctuation(" ".join(words[i:i + 2]) if i + 2 < len(words) else "")
+        # triple = remove_punctuation(" ".join(words[i:i + 3]) if i + 3 < len(words) else "")
+        pair = ""
+        triple = ""
         word, pair, triple = map(lambda x: x.replace(".", "").replace(",", ""), (word, pair, triple))
         for seq in {word, pair, triple}:
             if not seq:
@@ -39,7 +41,7 @@ def get_terms(text: str) -> typing.Optional[list[dict]]:
             print(seq)
             definition = get_term_definition(seq)
             if not definition:
-                match = get_close_matches(seq.lower(), map(lambda x: x.lower(), glossary), cutoff=0.9, n=1)
+                match = get_close_matches(seq.lower(), map(lambda x: x.lower(), glossary), cutoff=0.8, n=1)
                 print("match:", match)
                 if match:
                     definition = glossary.get(str(match[0]).capitalize(), None)
