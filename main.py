@@ -2,9 +2,9 @@ import re
 
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
-
 import models
 from services import detector, glossary
+from services.utils import run_sync
 
 app = FastAPI()
 
@@ -24,7 +24,7 @@ async def app_get_terms(response: Response, text: models.Text):
         response.status_code = 400
         return {"status": "error", "message": "No text provided"}
 
-    return {"status": "ok", "terms": glossary.get_terms(text.text)}
+    return {"status": "ok", "terms": await run_sync(glossary.get_terms, text.text)}
 
 
 @app.get("/term/{word}")
@@ -34,7 +34,7 @@ async def app_get_term_definition(response: Response, word: str):
         response.status_code = 400
         return {"status": "error", "message": "No text provided"}
 
-    definition, key = glossary.get_term_definition(word)
+    definition, key = await run_sync(glossary.get_term_definition, word)
 
     if definition is None:
         response.status_code = 404
@@ -51,7 +51,7 @@ async def app_detect_slang(response: Response, text: models.Text):
         return {"status": "error", "message": "No text provided"}
 
     determined_terms = {}
-    for term in glossary.get_terms(text.text):
+    for term in await run_sync(glossary.get_terms, text.text):
         determined_terms.update(term)
     # print(f"TERMS: {determined_terms}")
 
@@ -62,7 +62,7 @@ async def app_detect_slang(response: Response, text: models.Text):
             if " " not in key
         },
         **{
-            f"{i}_ml": glossary.get_term_definition(text.text.split()[i])[0]
+            f"{i}_ml": (await run_sync(glossary.get_term_definition, text.text.split()[i]))[0]
             for i in detector.detect_slang(text.text)
         },
     }
