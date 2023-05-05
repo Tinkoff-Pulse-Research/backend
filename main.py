@@ -1,3 +1,5 @@
+import re
+
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -51,10 +53,11 @@ async def app_detect_slang(response: Response, text: models.Text):
     determined_terms = {}
     for term in glossary.get_terms(text.text):
         determined_terms.update(term)
+    print(f"TERMS: {determined_terms}")
 
     res = {
         **{
-            str(glossary.remove_punctuation(text.text).split().index(key)) + "_determined": value
+            str(re.split(r"\s", glossary.remove_punctuation(text.text)).index(key)) + "_determined": value
             for key, value in determined_terms.items()
             if " " not in key
         },
