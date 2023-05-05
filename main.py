@@ -48,7 +48,10 @@ async def app_detect_slang(response: Response, text: models.Text):
             i: glossary.get_term_definition(text.text.split()[i])
             for i in detector.detect_slang(text.text)
         },
-        **determined_terms,
+        **{
+            glossary.remove_punctuation(text.text).split().index(key): value
+            for key, value in determined_terms.items()
+        },
     }
 
     return {"status": "ok", "result": {"slang": bool(res), "highlight": res}}

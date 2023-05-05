@@ -21,7 +21,6 @@ def detect_slang(text: str) -> List[int]:
 
     vocab = {value: key for key, value in vectorizer.vocabulary_.items()}
 
-    word_sentence_influence = {}
     for i in range(vec.shape[1]):
         sentence_influence = vec[0, i]
         if sentence_influence > 0.2 and i in word_slang_influence:
@@ -30,7 +29,7 @@ def detect_slang(text: str) -> List[int]:
     
     res = []
 
-    for i, word in enumerate(text):
+    for i, word in enumerate(text.split()):
         preprocessed_word = preprocessor.preprocess([word])[0]
         if preprocessed_word in result:
             res += [i]
