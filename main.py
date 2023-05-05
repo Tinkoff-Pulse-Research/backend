@@ -54,12 +54,12 @@ async def app_detect_slang(response: Response, text: models.Text):
 
     res = {
         **{
-            i: glossary.get_term_definition(text.text.split()[i])
-            for i in detector.detect_slang(text.text)
+            str(glossary.remove_punctuation(text.text).split().index(key)) + "_determined": value
+            for key, value in determined_terms.items()
         },
         **{
-            glossary.remove_punctuation(text.text).split().index(key): value
-            for key, value in determined_terms.items()
+            f"{i}_ml": glossary.get_term_definition(text.text.split()[i])
+            for i in detector.detect_slang(text.text)
         },
     }
 
