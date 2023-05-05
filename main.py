@@ -39,12 +39,16 @@ async def app_detect_slang(response: Response, text: models.Text):
         response.status_code = 400
         return {"status": "error", "message": "No text provided"}
 
+    determined_terms = {}
+    for term in glossary.get_terms(text.text):
+        determined_terms.update(term)
+
     res = {
         **{
             i: glossary.get_term_definition(text.text.split()[i])
             for i in detector.detect_slang(text.text)
         },
-        **glossary.get_terms(text.text),
+        **determined_terms,
     }
 
     return {"status": "ok", "result": {"slang": bool(res), "highlight": res}}
