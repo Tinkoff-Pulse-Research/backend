@@ -41,7 +41,7 @@ def get_terms(text: str) -> typing.Optional[list[dict]]:
             # print(seq)
             definition = get_term_definition(seq)
             if not definition:
-                match = get_close_matches(seq.lower(), map(lambda x: x.lower(), glossary), cutoff=0.85, n=1)
+                match = get_close_matches(seq.lower(), map(lambda x: x.lower(), glossary), cutoff=0.9, n=1)
                 # print("match:", match)
                 if match:
                     definition = glossary.get(str(match[0]).capitalize(), None)
